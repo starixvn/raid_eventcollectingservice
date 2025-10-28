@@ -1,0 +1,68 @@
+@eventcollectingservice_HostAddress = http://localhost:5204
+
+### Test BetCity Events (Batch)
+POST {{eventcollectingservice_HostAddress}}/BetCity/events
+Content-Type: application/json
+
+{
+  "events": [
+    {
+      "eventId": 20429821,
+      "eventDate": "2025-10-26",
+      "eventDateTime": "2025/10/26 19:00",
+      "leagueGroupId": 118,
+      "leagueId": 208643,
+      "league": "Greece. ESAKE. Men.",
+      "homeId": 1793,
+      "home": "PAOK",
+      "awayId": 1795,
+      "away": "Peristeri Athens",
+      "homeCountry": "GR",
+      "awayCountry": "GR",
+      "status": 2,
+      "future": 0,
+      "statistics": 0
+    },
+    {
+      "eventId": 20429822,
+      "eventDate": "2025-10-26",
+      "eventDateTime": "2025/10/26 22:00",
+      "leagueGroupId": 118,
+      "leagueId": 208643,
+      "league": "Greece. ESAKE. Men.",
+      "homeId": 1792,
+      "home": "Panathinaikos",
+      "awayId": 229773,
+      "away": "Promitheas Patras",
+      "homeCountry": "GR",
+      "awayCountry": "GR",
+      "status": 2,
+      "future": 0,
+      "statistics": 0
+    }
+  ]
+}
+
+### Test Futbol24 Event
+POST {{eventcollectingservice_HostAddress}}/Futbol24/events
+Content-Type: application/json
+
+{
+  "eventId": 20469424,
+  "eventDate": "2025-10-26",
+  "eventDateTime": "2025/10/26 22:00",
+  "leagueGroupId": 118,
+  "leagueId": 208643,
+  "league": "Greece. ESAKE. Men.",
+  "homeId": 1787,
+  "home": "Iraklis Thessal",
+  "awayId": 1532,
+  "away": "AEK Athens",
+  "homeCountry": "GR",
+  "awayCountry": "GR",
+  "status": 2,
+  "future": 0,
+  "statistics": 0
+}
+
+###
