@@ -25,18 +25,19 @@ builder.Services.AddScoped<IFutbol24Service, Futbol24Service>();
 builder.Services.AddScoped<IBetCityRepository, BetCityRepository>();
 builder.Services.AddScoped<IFutbol24Repository, Futbol24Repository>();
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
 // Map controllers
 app.MapControllers();
+
+app.MapHealthChecks("/healthz");
 
 app.Run();
