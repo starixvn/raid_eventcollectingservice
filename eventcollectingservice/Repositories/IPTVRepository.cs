@@ -19,7 +19,7 @@ namespace eventcollectingservice.Repositories
 
         public IPTVRepository(IConfiguration configuration)
         {
-            _dbConnection = new MySqlConnection(configuration.GetConnectionString("IPTV"));
+            _dbConnection = new MySqlConnection(configuration.GetConnectionString("OddsWarehouse"));
         }
 
         public async Task<int> SaveLeagues(League league)

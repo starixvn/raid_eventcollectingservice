@@ -19,7 +19,7 @@ namespace eventcollectingservice.Repositories
 
         public BetCityRepository(IConfiguration configuration)
         {
-            _dbConnection = new MySqlConnection(configuration.GetConnectionString("BetCity"));
+            _dbConnection = new MySqlConnection(configuration.GetConnectionString("OddsWarehouse"));
         }
 
         public async Task SaveLeagueGroups(List<LeagueGroup> leagueGroups)

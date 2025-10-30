@@ -20,7 +20,7 @@ namespace eventcollectingservice.Repositories
 
         public Futbol24Repository(IConfiguration configuration)
         {
-            _dbConnection = new MySqlConnection(configuration.GetConnectionString("Futbol24"));
+            _dbConnection = new MySqlConnection(configuration.GetConnectionString("OddsWarehouse"));
         }
 
         public async Task SaveCategories(List<Category> categories)
