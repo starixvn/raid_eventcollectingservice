@@ -20,10 +20,12 @@ builder.Services.AddControllers();
 // Register services
 builder.Services.AddScoped<IBetCityService, BetCityService>();
 builder.Services.AddScoped<IFutbol24Service, Futbol24Service>();
+builder.Services.AddScoped<IIPTVService, IPTVService>();														
 
 // Register repositories
 builder.Services.AddScoped<IBetCityRepository, BetCityRepository>();
 builder.Services.AddScoped<IFutbol24Repository, Futbol24Repository>();
+builder.Services.AddScoped<IIPTVRepository, IPTVRepository>();
 
 builder.Services.AddHealthChecks();
 
