@@ -37,6 +37,7 @@ namespace eventcollectingservice.Models.Futbol24
 
         // 欄位: AwayName (e.g., "Kolkheti Poti")
         public string AwayName { get; set; }
+        public int EventStatus { get; set; }
     }
 
     public class Futbol24EventRequest
