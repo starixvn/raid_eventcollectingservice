@@ -59,7 +59,7 @@ namespace eventcollectingservice.Services
                 teams.Add(new Team { Id = eventData.HomeId, Name = eventData.HomeName, LeagueId = eventData.PLeagueId });
                 teams.Add(new Team { Id = eventData.AwayId, Name = eventData.AwayName, LeagueId = eventData.PLeagueId });
 
-                matches.Add(new GameMatch { Id = (int)eventData.Mid, Team1Id = eventData.HomeId, Team2Id = eventData.AwayId, KickoffTime = eventData.EventTime, LeagueId = eventData.LeagueId });
+                matches.Add(new GameMatch { Id = (int)eventData.Mid, Team1Id = eventData.HomeId, Team2Id = eventData.AwayId, KickoffTime = eventData.EventTime, LeagueId = eventData.LeagueId, IsActive = true });
             }
 
             // Remove duplicates before saving
@@ -67,6 +67,19 @@ namespace eventcollectingservice.Services
             leagues = leagues.GroupBy(l => l.Id).Select(l => l.First()).ToList();
             teams = teams.GroupBy(t => t.Id).Select(t => t.First()).ToList();
             matches = matches.GroupBy(m => m.Id).Select(m => m.First()).ToList();
+
+            // Get currently active matches from DB
+            var activeMatchIds = await futbol24Repository.GetActiveMatchIds();
+
+            // Find matches that are no longer in the incoming data
+            var incomingMatchIds = matches.Select(m => m.Id).ToList();
+            var matchesToDeactivate = activeMatchIds.Where(id => !incomingMatchIds.Contains(id)).ToList();
+
+            // Deactivate matches that are no longer present
+            if (matchesToDeactivate.Any())
+            {
+                await futbol24Repository.DeactivateMatches(matchesToDeactivate);
+            }
 
             try
             {

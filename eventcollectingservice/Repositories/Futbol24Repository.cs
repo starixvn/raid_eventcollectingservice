@@ -12,6 +12,8 @@ namespace eventcollectingservice.Repositories
         Task SaveLeagues(List<League> leagues);
         Task SaveTeams(List<Team> teams);
         Task SaveMatches(List<GameMatch> matches);
+        Task<List<int>> GetActiveMatchIds();
+        Task DeactivateMatches(List<int> matchIds);
     }
 
     public class Futbol24Repository : IFutbol24Repository
@@ -45,6 +47,24 @@ namespace eventcollectingservice.Repositories
         {
             var query = "INSERT INTO `futbol24_match` (id, team_1_id, team_2_id, is_active, status, kickoff_time, league_id, create_time, update_time) VALUES (@Id, @Team1Id, @Team2Id, @IsActive, @Status, @KickoffTime, @LeagueId, NOW(), NOW()) ON DUPLICATE KEY UPDATE team_1_id = @Team1Id, team_2_id = @Team2Id, is_active = @IsActive, status = @Status, kickoff_time = @KickoffTime, league_id = @LeagueId, update_time = NOW();";
             await _dbConnection.ExecuteAsync(query, matches);
+        }
+
+        public async Task<List<int>> GetActiveMatchIds()
+        {
+            var query = "SELECT id FROM `futbol24_match` WHERE is_active = 1;";
+            var result = await _dbConnection.QueryAsync<int>(query);
+            return result.ToList();
+        }
+
+        public async Task DeactivateMatches(List<int> matchIds)
+        {
+            if (matchIds == null || !matchIds.Any())
+            {
+                return;
+            }
+
+            var query = "UPDATE `futbol24_match` SET is_active = 0, update_time = NOW() WHERE id IN @MatchIds;";
+            await _dbConnection.ExecuteAsync(query, new { MatchIds = matchIds });
         }
     }
 }

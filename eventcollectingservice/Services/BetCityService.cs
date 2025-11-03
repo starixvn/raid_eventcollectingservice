@@ -53,12 +53,12 @@ namespace eventcollectingservice.Services
             {
                 if (eventData is { Future: 0, Statistics: 0 })
                 {
-                    leagueGroups.Add(new LeagueGroup { Id = eventData.LeagueGroupId, Name = eventData.League });    
+                    leagueGroups.Add(new LeagueGroup { Id = eventData.LeagueGroupId, Name = eventData.League });
                 }
                 leagues.Add(new League { Id = eventData.LeagueId, Name = eventData.League, LeagueGroupId = eventData.LeagueGroupId });
                 teams.Add(new Team { Id = eventData.HomeId, Name = eventData.Home, LeagueGroupId = eventData.LeagueGroupId, Country = eventData.HomeCountry });
                 teams.Add(new Team { Id = eventData.AwayId, Name = eventData.Away, LeagueGroupId = eventData.LeagueGroupId, Country = eventData.AwayCountry });
-                matches.Add(new Match { Id = eventData.EventId, Team1Id = eventData.HomeId, Team2Id = eventData.AwayId, KickoffTime = ParseDateTime(eventData.EventDateTime), LeagueId = eventData.LeagueId });
+                matches.Add(new Match { Id = eventData.EventId, Team1Id = eventData.HomeId, Team2Id = eventData.AwayId, KickoffTime = ParseDateTime(eventData.EventDateTime), LeagueId = eventData.LeagueId, IsActive = true });
             }
 
             // Remove duplicates before saving
@@ -66,10 +66,23 @@ namespace eventcollectingservice.Services
             leagues = leagues.GroupBy(l => l.Id).Select(l => l.First()).ToList();
             teams = teams.GroupBy(t => t.Id).Select(t => t.First()).ToList();
             matches = matches.GroupBy(m => m.Id).Select(m => m.First()).ToList();
-            
+
+            // Get currently active matches from DB
+            var activeMatchIds = await _betCityRepository.GetActiveMatchIds();
+
+            // Find matches that are no longer in the incoming data
+            var incomingMatchIds = matches.Select(m => m.Id).ToList();
+            var matchesToDeactivate = activeMatchIds.Where(id => !incomingMatchIds.Contains(id)).ToList();
+
+            // Deactivate matches that are no longer present
+            if (matchesToDeactivate.Any())
+            {
+                await _betCityRepository.DeactivateMatches(matchesToDeactivate);
+            }
+
             if (leagueGroups.Any())
             {
-                await _betCityRepository.SaveLeagueGroups(leagueGroups);    
+                await _betCityRepository.SaveLeagueGroups(leagueGroups);
             }
             await _betCityRepository.SaveLeagues(leagues);
             await _betCityRepository.SaveTeams(teams);
