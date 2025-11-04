@@ -19,7 +19,7 @@ namespace eventcollectingservice.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return BadRequest(new { error = ex.Message, stackTrace = ex.ToString() });
             }
         }
     }
