@@ -54,6 +54,7 @@ namespace eventcollectingservice.Repositories
         {
             var sql = @"
                 INSERT INTO iptv_match (
+                    event_id,
                     team1_id,
                     team2_id,
                     kickoff_time,
@@ -65,6 +66,7 @@ namespace eventcollectingservice.Repositories
                     create_time,
                     update_time
                 ) VALUES (
+                    @EventId,
                     @Team1Id,
                     @Team2Id,
                     @KickoffTime,

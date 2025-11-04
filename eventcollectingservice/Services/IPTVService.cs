@@ -51,6 +51,7 @@ namespace eventcollectingservice.Services
                 // 添加比賽
                 matches.Add(new GameMatch
                 {
+                    EventId = eventData.EventId,
                     Team1Id = team1Id,
                     Team2Id = team2Id,
                     KickoffTime = eventData.KickoffTime,
