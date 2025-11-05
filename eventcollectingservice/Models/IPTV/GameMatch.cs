@@ -9,6 +9,7 @@ namespace eventcollectingservice.Models.IPTV
     /// </summary>
     public class GameMatch
     {
+        public int EventId { get; set; }
         public int Team1Id { get; set; }
         public int Team2Id { get; set; }
         public DateTime KickoffTime { get; set; }

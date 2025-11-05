@@ -2,6 +2,7 @@ namespace eventcollectingservice.Models.IPTV
 {
     public class IPTVEventData
     {
+        public int EventId { get; set; }
         public DateTime KickoffTime { get; set; }
         public string LeagueName { get; set; } = string.Empty;
         public string HomeTeamName { get; set; } = string.Empty;
