@@ -19,7 +19,7 @@ namespace eventcollectingservice.Repositories
 
         public BWFRepository(IConfiguration configuration)
         {
-            _dbConnection = new MySqlConnection(configuration.GetConnectionString("BWF"));
+            _dbConnection = new MySqlConnection(configuration.GetConnectionString("OddsWarehouse"));
         }
 
         public async Task<int> SaveLevel(Level level)
