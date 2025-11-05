@@ -41,19 +41,19 @@ namespace eventcollectingservice.Services
 
         private async Task ProcessEvents(List<Futbol24EventData> events)
         {
-            var categories = new List<Category>();
+            var categories = new List<Country>();
             var leagues = new List<League>();
             var teams = new List<Team>();
             var matches = new List<GameMatch>();
 
             foreach (var eventData in events)
             {
-                categories.Add(new Category { Id = eventData.CId, Name = eventData.CName });
+                categories.Add(new Country { Id = eventData.CId, Name = eventData.CName });
 
-                leagues.Add(new League { Id = eventData.PLeagueId, Name = eventData.PLeagueName, CategoryId = eventData.CId });
+                leagues.Add(new League { Id = eventData.PLeagueId, Name = eventData.PLeagueName, CountryId = eventData.CId });
                 if (eventData.LeagueId != eventData.PLeagueId && !string.IsNullOrEmpty(eventData.LeagueName))
                 {
-                    leagues.Add(new League { Id = eventData.LeagueId, Name = eventData.LeagueName, CategoryId = eventData.CId, ParentLeagueId = eventData.PLeagueId });
+                    leagues.Add(new League { Id = eventData.LeagueId, Name = eventData.LeagueName, CountryId = eventData.CId, ParentLeagueId = eventData.PLeagueId });
                 }
 
                 teams.Add(new Team { Id = eventData.HomeId, Name = eventData.HomeName, LeagueId = eventData.PLeagueId });
@@ -83,7 +83,7 @@ namespace eventcollectingservice.Services
 
             try
             {
-                await futbol24Repository.SaveCategories(categories);
+                await futbol24Repository.SaveCountries(categories);
                 await futbol24Repository.SaveLeagues(leagues);
                 await futbol24Repository.SaveTeams(teams);
                 await futbol24Repository.SaveMatches(matches);

@@ -8,7 +8,7 @@ namespace eventcollectingservice.Repositories
 {
     public interface IFutbol24Repository
     {
-        Task SaveCategories(List<Category> categories);
+        Task SaveCountries(List<Country> countries);
         Task SaveLeagues(List<League> leagues);
         Task SaveTeams(List<Team> teams);
         Task SaveMatches(List<GameMatch> matches);
@@ -25,15 +25,15 @@ namespace eventcollectingservice.Repositories
             _dbConnection = new MySqlConnection(configuration.GetConnectionString("OddsWarehouse"));
         }
 
-        public async Task SaveCategories(List<Category> categories)
+        public async Task SaveCountries(List<Country> countries)
         {
-            var query = "INSERT INTO futbol24_category (id, name, create_time, update_time) VALUES (@Id, @Name, NOW(), NOW()) ON DUPLICATE KEY UPDATE name = @Name, update_time = NOW();";
-            await _dbConnection.ExecuteAsync(query, categories);
+            var query = "INSERT INTO futbol24_country (id, name, create_time, update_time) VALUES (@Id, @Name, NOW(), NOW()) ON DUPLICATE KEY UPDATE name = @Name, update_time = NOW();";
+            await _dbConnection.ExecuteAsync(query, countries);
         }
 
         public async Task SaveLeagues(List<League> leagues)
         {
-            var query = "INSERT INTO futbol24_league (id, name, category_id, parent_league_id, create_time, update_time) VALUES (@Id, @Name, @CategoryId, @ParentLeagueId, NOW(), NOW()) ON DUPLICATE KEY UPDATE name = @Name, category_id = @CategoryId, parent_league_id = @ParentLeagueId, update_time = NOW();";
+            var query = "INSERT INTO futbol24_league (id, name, country_id, parent_league_id, create_time, update_time) VALUES (@Id, @Name, @CountryId, @ParentLeagueId, NOW(), NOW()) ON DUPLICATE KEY UPDATE name = @Name, country_id = @CountryId, parent_league_id = @ParentLeagueId, update_time = NOW();";
             await _dbConnection.ExecuteAsync(query, leagues);
         }
 

@@ -9,7 +9,7 @@ namespace eventcollectingservice.Models.Futbol24
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public int CategoryId { get; set; }
+        public int CountryId { get; set; }
 
         // parent_league_id 允許 Null (TRUE)，所以使用 int?
         public int? ParentLeagueId { get; set; }
