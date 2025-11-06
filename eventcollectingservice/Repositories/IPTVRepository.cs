@@ -6,8 +6,15 @@ using MySql.Data.MySqlClient;
 
 namespace eventcollectingservice.Repositories
 {
+    public class eventInfo
+    {
+        public int Team1_Id { get; set; }
+        public int Team2_Id { get; set; }
+        public int League_Id { get; set; }
+    }
     public interface IIPTVRepository
     {
+        Task<eventInfo> SearchLeague(IPTVEventData eventData);
         Task<int> SaveLeagues(League league);
         Task<int> SaveTeams(Team team);
         Task SaveMatches(List<GameMatch> matches);
@@ -20,6 +27,14 @@ namespace eventcollectingservice.Repositories
         public IPTVRepository(IConfiguration configuration)
         {
             _dbConnection = new MySqlConnection(configuration.GetConnectionString("OddsWarehouse"));
+        }
+
+        public async Task<eventInfo> SearchLeague(IPTVEventData eventData)
+        {
+            var sql = @"
+                SELECT team1_id,team2_id, league_id FROM iptv_match WHERE event_id = @EventId;
+            ";
+            return await _dbConnection.QuerySingleOrDefaultAsync<eventInfo>(sql, eventData);
         }
 
         public async Task<int> SaveLeagues(League league)

@@ -39,12 +39,22 @@ namespace eventcollectingservice.Services
             foreach (var eventData in events)
             {
                 // 添加分類
+                var eventInfo = await iptvRepository.SearchLeague(eventData);
+                int leagueId = 0;
+                int team1Id = 0;
+                int team2Id = 0;
+                if (eventInfo == null)
+                {
+                    // 添加聯賽
+                    leagueId = await iptvRepository.SaveLeagues(new League { Name = eventData.LeagueName });
+                    team1Id = await iptvRepository.SaveTeams(new Team { Name = eventData.HomeTeamName });
+                    team2Id = await iptvRepository.SaveTeams(new Team { Name = eventData.AwayTeamName });
+                }else{
+                    leagueId = eventInfo.League_Id;
+                    team1Id = eventInfo.Team1_Id;
+                    team2Id = eventInfo.Team2_Id;
+                }
 
-
-                // 添加聯賽
-                var leagueId = await iptvRepository.SaveLeagues(new League { Name = eventData.LeagueName });
-                var team1Id = await iptvRepository.SaveTeams(new Team { Name = eventData.HomeTeamName });
-                var team2Id = await iptvRepository.SaveTeams(new Team { Name = eventData.AwayTeamName });
                 // 添加隊伍
 
 
