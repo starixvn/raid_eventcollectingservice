@@ -94,6 +94,7 @@ namespace eventcollectingservice.Services
                     Name = matchData.LeagueName,
                     LevelId = levelId,
                     Mode = matchData.Mode,
+                    AgeCategory = matchData.AgeCategory,
                     MaxRound = matchData.MaxRound
                 });
                 
