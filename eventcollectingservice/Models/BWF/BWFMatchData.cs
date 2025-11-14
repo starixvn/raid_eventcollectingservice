@@ -17,6 +17,7 @@ namespace eventcollectingservice.Models.BWF
         public int LeagueId { get; set; }
         public string LeagueName { get; set; } = string.Empty;
         public string Mode { get; set; } = string.Empty;  // MS, WS, MD, WD, XD
+        public string AgeCategory { get; set; } = string.Empty;
         public string? MaxRound { get; set; }
 
         // Level 資訊

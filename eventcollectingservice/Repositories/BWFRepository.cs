@@ -57,13 +57,14 @@ namespace eventcollectingservice.Repositories
         {
             // 使用 league_id + mode 組合作為唯一鍵來判斷重複
             var query = @"
-                INSERT INTO bwf_league_mode (league_id, name, level_id, mode, max_round, create_time, update_time) 
-                VALUES (@LeagueId, @Name, @LevelId, @Mode, @MaxRound, NOW(), NOW()) 
+                INSERT INTO bwf_league_mode (league_id, name, level_id, mode, age_category, max_round, create_time, update_time) 
+                VALUES (@LeagueId, @Name, @LevelId, @Mode, @AgeCategory, @MaxRound, NOW(), NOW()) 
                 ON DUPLICATE KEY UPDATE 
                     id = LAST_INSERT_ID(id),
                     name = VALUES(name), 
                     level_id = VALUES(level_id), 
                     mode = VALUES(mode), 
+                    age_category = VALUES(age_category), 
                     max_round = VALUES(max_round), 
                     update_time = NOW();
                 SELECT LAST_INSERT_ID() as Id

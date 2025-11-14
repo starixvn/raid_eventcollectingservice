@@ -10,6 +10,7 @@ namespace eventcollectingservice.Models.BWF
         public string Name { get; set; } = string.Empty;
         public int LevelId { get; set; }
         public string Mode { get; set; } = string.Empty;
+        public string AgeCategory { get; set; } = string.Empty;
         
         // max_round 允許 Null，所以使用 string?
         public string? MaxRound { get; set; }
