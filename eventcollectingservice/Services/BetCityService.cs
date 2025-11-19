@@ -55,7 +55,7 @@ namespace eventcollectingservice.Services
                 {
                     leagueGroups.Add(new LeagueGroup { Id = eventData.LeagueGroupId, Name = eventData.League });
                 }
-                leagues.Add(new League { Id = eventData.LeagueId, Name = eventData.League, LeagueGroupId = eventData.LeagueGroupId });
+                leagues.Add(new League { Id = eventData.LeagueId, Name = eventData.League, LeagueGroupId = eventData.LeagueGroupId, SportId = eventData.SportId });
                 teams.Add(new Team { Id = eventData.HomeId, Name = eventData.Home, LeagueGroupId = eventData.LeagueGroupId, Country = eventData.HomeCountry });
                 teams.Add(new Team { Id = eventData.AwayId, Name = eventData.Away, LeagueGroupId = eventData.LeagueGroupId, Country = eventData.AwayCountry });
                 matches.Add(new Match { Id = eventData.EventId, Team1Id = eventData.HomeId, Team2Id = eventData.AwayId, KickoffTime = ParseDateTime(eventData.EventDateTime), LeagueId = eventData.LeagueId, IsActive = true });

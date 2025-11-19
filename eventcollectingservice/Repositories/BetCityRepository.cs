@@ -32,7 +32,7 @@ namespace eventcollectingservice.Repositories
 
         public async Task SaveLeagues(List<League> leagues)
         {
-            var query = "INSERT INTO betcity_league (id, name, league_group_id, create_time, update_time) VALUES (@Id, @Name, @LeagueGroupId, NOW(), NOW()) ON DUPLICATE KEY UPDATE name = @Name, league_group_id = @LeagueGroupId, update_time = NOW();";
+            var query = "INSERT INTO betcity_league (id, name, league_group_id, sport_type, create_time, update_time) VALUES (@Id, @Name, @LeagueGroupId, @SportId, NOW(), NOW()) ON DUPLICATE KEY UPDATE name = @Name, league_group_id = @LeagueGroupId, sport_type=@SportId, update_time = NOW();";
             await _dbConnection.ExecuteAsync(query, leagues);
         }
 
