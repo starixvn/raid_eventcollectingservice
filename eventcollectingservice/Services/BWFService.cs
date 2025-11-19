@@ -55,33 +55,45 @@ namespace eventcollectingservice.Services
                 var levelId = await _bwfRepository.SaveLevel(new Level { Name = matchData.LevelName });
 
                 // 添加 Player
+                if (!matchData.PlayerHome1Id.HasValue)
+                {
+                    throw new ArgumentException($"PlayerHome1Id is required but was null for match {matchData.MatchId}");
+                }
                 var playerHome1Id = await _bwfRepository.SavePlayer(new Player 
                 { 
+                    Id = matchData.PlayerHome1Id.Value,
                     Name = matchData.PlayerHome1Name, 
                     Country = matchData.PlayerHome1Country 
                 });
                 
                 int? playerHome2Id = null;
-                if (!string.IsNullOrEmpty(matchData.PlayerHome2Name))
+                if (!string.IsNullOrEmpty(matchData.PlayerHome2Name) && matchData.PlayerHome2Id.HasValue)
                 {
                     playerHome2Id = await _bwfRepository.SavePlayer(new Player 
                     { 
+                        Id = matchData.PlayerHome2Id.Value,
                         Name = matchData.PlayerHome2Name, 
                         Country = matchData.PlayerHome2Country ?? "" 
                     });
                 }
 
+                if (!matchData.PlayerAway1Id.HasValue)
+                {
+                    throw new ArgumentException($"PlayerAway1Id is required but was null for match {matchData.MatchId}");
+                }
                 var playerAway1Id = await _bwfRepository.SavePlayer(new Player 
                 { 
+                    Id = matchData.PlayerAway1Id.Value,
                     Name = matchData.PlayerAway1Name, 
                     Country = matchData.PlayerAway1Country 
                 });
                 
                 int? playerAway2Id = null;
-                if (!string.IsNullOrEmpty(matchData.PlayerAway2Name))
+                if (!string.IsNullOrEmpty(matchData.PlayerAway2Name) && matchData.PlayerAway2Id.HasValue)
                 {
                     playerAway2Id = await _bwfRepository.SavePlayer(new Player 
                     { 
+                        Id = matchData.PlayerAway2Id.Value,
                         Name = matchData.PlayerAway2Name, 
                         Country = matchData.PlayerAway2Country ?? "" 
                     });
@@ -97,20 +109,21 @@ namespace eventcollectingservice.Services
                     AgeCategory = matchData.AgeCategory,
                     MaxRound = matchData.MaxRound
                 });
-                
-                matchesToSave.Add(new Match 
-                { 
-                    KickoffTime = matchData.KickoffTime, 
-                    PlayerHome1Id = playerHome1Id, 
-                    PlayerHome2Id = playerHome2Id, 
-                    PlayerAway1Id = playerAway1Id, 
-                    PlayerAway2Id = playerAway2Id, 
-                    LeagueModeId = leagueModeId, 
-                    Court = matchData.Court, 
-                    Round = matchData.Round, 
-                    CurrentRound = matchData.CurrentRound, 
-                    IsActive = matchData.IsActive, 
-                    Status = matchData.Status 
+
+                matchesToSave.Add(new Match
+                {
+                    Id = matchData.MatchId,
+                    KickoffTime = matchData.KickoffTime,
+                    PlayerHome1Id = playerHome1Id,
+                    PlayerHome2Id = playerHome2Id,
+                    PlayerAway1Id = playerAway1Id,
+                    PlayerAway2Id = playerAway2Id,
+                    LeagueModeId = leagueModeId,
+                    Court = matchData.Court,
+                    Round = matchData.Round,
+                    CurrentRound = matchData.CurrentRound,
+                    IsActive = matchData.IsActive,
+                    Status = matchData.Status
                 });
             }
 
