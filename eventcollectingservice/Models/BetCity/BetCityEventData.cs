@@ -17,6 +17,7 @@ namespace eventcollectingservice.Models.BetCity
         public int Status { get; set; }
         public int Future { get; set; }
         public int Statistics { get; set; }
+        public int SportId { get; set; }
     }
 
     public class BetCityEventsRequestDto

@@ -5,6 +5,7 @@ namespace eventcollectingservice.Models.BetCity
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public int LeagueGroupId { get; set; }
+        public int SportId { get; set; }
         public DateTime UpdateTime { get; set; }
         public DateTime CreateTime { get; set; }
     }
