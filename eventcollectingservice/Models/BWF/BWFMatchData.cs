@@ -25,7 +25,7 @@ namespace eventcollectingservice.Models.BWF
         public string? LevelName { get; set; }
 
         // 主場球員資訊
-        public int PlayerHome1Id { get; set; }
+        public int? PlayerHome1Id { get; set; }
         public string PlayerHome1Name { get; set; } = string.Empty;
         public string PlayerHome1Country { get; set; } = string.Empty;
         public int? PlayerHome2Id { get; set; }
@@ -33,7 +33,7 @@ namespace eventcollectingservice.Models.BWF
         public string? PlayerHome2Country { get; set; }
 
         // 客場球員資訊
-        public int PlayerAway1Id { get; set; }
+        public int? PlayerAway1Id { get; set; }
         public string PlayerAway1Name { get; set; } = string.Empty;
         public string PlayerAway1Country { get; set; } = string.Empty;
         public int? PlayerAway2Id { get; set; }

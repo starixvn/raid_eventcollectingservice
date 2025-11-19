@@ -48,9 +48,12 @@ namespace eventcollectingservice.Repositories
                     name = values(name),
                     country = values(country),
                     update_time = NOW();
+                SELECT @Id as Id
             ";
 
-            return await _dbConnection.ExecuteAsync(query, player);
+            // 確保玩家已保存，然後返回 ID
+            await _dbConnection.ExecuteAsync(query, player);
+            return player.Id;
         }
 
         public async Task<int> SaveLeagueMode(LeagueMode leagueMode)
