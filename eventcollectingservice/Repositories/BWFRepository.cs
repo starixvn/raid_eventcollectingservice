@@ -26,9 +26,9 @@ namespace eventcollectingservice.Repositories
         {
             // 使用 name 作為唯一鍵來判斷重複
             var query = @"
-                INSERT INTO bwf_level (name, create_time, update_time) 
-                VALUES (@Name, NOW(), NOW()) 
-                ON DUPLICATE KEY UPDATE 
+                INSERT INTO bwf_level (name, create_time, update_time)
+                VALUES (@Name, NOW(), NOW())
+                ON DUPLICATE KEY UPDATE
                     id = LAST_INSERT_ID(id),
                     update_time = NOW();
                 SELECT LAST_INSERT_ID() as Id
@@ -40,32 +40,32 @@ namespace eventcollectingservice.Repositories
 
         public async Task<int> SavePlayer(Player player)
         {
-            // 使用 name + country 組合作為唯一鍵來判斷重複
             var query = @"
-                INSERT INTO bwf_player (name, country, create_time, update_time) 
-                VALUES (@Name, @Country, NOW(), NOW()) 
-                ON DUPLICATE KEY UPDATE 
-                    id = LAST_INSERT_ID(id),
+                INSERT INTO bwf_player (id, name, country, create_time, update_time)
+                VALUES (@Id, @Name, @Country, NOW(), NOW())
+                ON DUPLICATE KEY UPDATE
+                    id = values(id),
+                    name = values(name),
+                    country = values(country),
                     update_time = NOW();
-                SELECT LAST_INSERT_ID() as Id
             ";
-            var id = await _dbConnection.ExecuteScalarAsync<int>(query, player);
-            return id;
+
+            return await _dbConnection.ExecuteAsync(query, player);
         }
 
         public async Task<int> SaveLeagueMode(LeagueMode leagueMode)
         {
             // 使用 league_id + mode 組合作為唯一鍵來判斷重複
             var query = @"
-                INSERT INTO bwf_league_mode (league_id, name, level_id, mode, age_category, max_round, create_time, update_time) 
-                VALUES (@LeagueId, @Name, @LevelId, @Mode, @AgeCategory, @MaxRound, NOW(), NOW()) 
-                ON DUPLICATE KEY UPDATE 
+                INSERT INTO bwf_league_mode (league_id, name, level_id, mode, age_category, max_round, create_time, update_time)
+                VALUES (@LeagueId, @Name, @LevelId, @Mode, @AgeCategory, @MaxRound, NOW(), NOW())
+                ON DUPLICATE KEY UPDATE
                     id = LAST_INSERT_ID(id),
-                    name = VALUES(name), 
-                    level_id = VALUES(level_id), 
-                    mode = VALUES(mode), 
-                    age_category = VALUES(age_category), 
-                    max_round = VALUES(max_round), 
+                    name = VALUES(name),
+                    level_id = VALUES(level_id),
+                    mode = VALUES(mode),
+                    age_category = VALUES(age_category),
+                    max_round = VALUES(max_round),
                     update_time = NOW();
                 SELECT LAST_INSERT_ID() as Id
             ";
@@ -77,36 +77,39 @@ namespace eventcollectingservice.Repositories
         {
             var query = @"
                 INSERT INTO bwf_match (
-                    kickoff_time, 
-                    player_home_1_id, 
-                    player_home_2_id, 
-                    player_away_1_id, 
-                    player_away_2_id, 
-                    league_mode_id, 
-                    court, 
-                    round, 
-                    current_round, 
-                    is_active, 
-                    status, 
+                    id,
+                    kickoff_time,
+                    player_home_1_id,
+                    player_home_2_id,
+                    player_away_1_id,
+                    player_away_2_id,
+                    league_mode_id,
+                    court,
+                    round,
+                    current_round,
+                    is_active,
+                    status,
                     create_time,
                     update_time
-                ) 
+                )
                 VALUES (
-                    @KickoffTime, 
-                    @PlayerHome1Id, 
-                    @PlayerHome2Id, 
-                    @PlayerAway1Id, 
-                    @PlayerAway2Id, 
-                    @LeagueModeId, 
-                    @Court, 
-                    @Round, 
-                    @CurrentRound, 
-                    @IsActive, 
-                    @Status,  
-                    NOW(), 
+                    @Id,
+                    @KickoffTime,
+                    @PlayerHome1Id,
+                    @PlayerHome2Id,
+                    @PlayerAway1Id,
+                    @PlayerAway2Id,
+                    @LeagueModeId,
+                    @Court,
+                    @Round,
+                    @CurrentRound,
+                    @IsActive,
+                    @Status,
+                    NOW(),
                     NOW()
                 )
                 ON DUPLICATE KEY UPDATE
+                    id = values(id),
                     kickoff_time = VALUES(kickoff_time),
                     player_home_1_id = VALUES(player_home_1_id),
                     player_home_2_id = VALUES(player_home_2_id),
@@ -120,7 +123,7 @@ namespace eventcollectingservice.Repositories
                     status = VALUES(status),
                     update_time = NOW();
                 ";
-                
+
             await _dbConnection.ExecuteAsync(query, matches);
         }
     }
