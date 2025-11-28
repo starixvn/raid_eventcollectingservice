@@ -38,5 +38,15 @@ namespace eventcollectingservice.Models.BetCity
         // Common score field for all sports
         [JsonPropertyName("finalscore")]
         public string? FinalScore { get; set; }
+
+        // TODO: Add match status field to enable FT confirmation
+        // [JsonPropertyName("match_status")]
+        // public string? MatchStatus { get; set; }  // "Live", "Finished", "Ended", "HalfTime", etc.
+        //
+        // This field is needed to confirm FT (final score) automatically:
+        // - When match_status = "Finished" or "Ended", we can safely confirm FT
+        // - Currently FT is never auto-confirmed because we lack this information
+        //
+        // Alternative: Query from betcity_match table's status field instead of adding to DTO
     }
 }

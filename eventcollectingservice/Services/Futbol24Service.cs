@@ -139,8 +139,7 @@ namespace eventcollectingservice.Services
                     {
                         MatchId = matchId,
                         Key = "ht",
-                        Value = resultData.HT,
-                        IsConfirmed = false
+                        Value = resultData.HT
                     });
                 }
 
@@ -151,8 +150,7 @@ namespace eventcollectingservice.Services
                     {
                         MatchId = matchId,
                         Key = "ft",
-                        Value = resultData.FT,
-                        IsConfirmed = false
+                        Value = resultData.FT
                     });
                 }
 
@@ -163,8 +161,7 @@ namespace eventcollectingservice.Services
                     {
                         MatchId = matchId,
                         Key = "et",
-                        Value = resultData.AET,
-                        IsConfirmed = false
+                        Value = resultData.AET
                     });
                 }
 
@@ -175,8 +172,7 @@ namespace eventcollectingservice.Services
                     {
                         MatchId = matchId,
                         Key = "ps",
-                        Value = resultData.AP,
-                        IsConfirmed = false
+                        Value = resultData.AP
                     });
                 }
 
@@ -187,8 +183,7 @@ namespace eventcollectingservice.Services
                     {
                         MatchId = matchId,
                         Key = "HRedCard",
-                        Value = resultData.HRedCard.Value.ToString(),
-                        IsConfirmed = false
+                        Value = resultData.HRedCard.Value.ToString()
                     });
                 }
 
@@ -199,8 +194,18 @@ namespace eventcollectingservice.Services
                     {
                         MatchId = matchId,
                         Key = "ARedCard",
-                        Value = resultData.ARedCard.Value.ToString(),
-                        IsConfirmed = false
+                        Value = resultData.ARedCard.Value.ToString()
+                    });
+                }
+
+                // Add Info (Match status info) if available
+                if (!string.IsNullOrEmpty(resultData.Info))
+                {
+                    matchResults.Add(new MatchResult
+                    {
+                        MatchId = matchId,
+                        Key = "Info",
+                        Value = resultData.Info
                     });
                 }
             }
@@ -210,6 +215,9 @@ namespace eventcollectingservice.Services
                 .GroupBy(r => new { r.MatchId, r.Key })
                 .Select(g => g.Last())
                 .ToList();
+
+            // Set IsConfirmed status BEFORE saving
+            SetFutbol24ConfirmationStatus(matchResults);
 
             if (!matchResults.Any())
             {
@@ -240,6 +248,62 @@ namespace eventcollectingservice.Services
             {
                 Console.WriteLine("No valid results to save. All match IDs were invalid.");
             }
+        }
+
+        // ========== Confirmation Status Setting (Before Save) ==========
+
+        private void SetFutbol24ConfirmationStatus(List<MatchResult> matchResults)
+        {
+            // Group by match_id
+            var matchIds = matchResults.Select(r => r.MatchId).Distinct().ToList();
+
+            foreach (var matchId in matchIds)
+            {
+                // Get keys from current batch only
+                var currentKeys = matchResults.Where(r => r.MatchId == matchId).Select(r => r.Key).ToHashSet();
+
+                // Get values for Info key to check match status
+                var infoResult = matchResults.FirstOrDefault(r => r.MatchId == matchId && r.Key == "Info");
+                string? infoValue = infoResult?.Value;
+
+                // Determine which keys should be confirmed based on current batch
+                foreach (var result in matchResults.Where(r => r.MatchId == matchId))
+                {
+                    result.IsConfirmed = ShouldFutbol24ResultBeConfirmed(result.Key, currentKeys, infoValue);
+                }
+            }
+        }
+
+        private bool ShouldFutbol24ResultBeConfirmed(string key, HashSet<string> currentKeys, string? infoValue)
+        {
+            // Rule 1: If match is cancelled or postponed, confirm all results
+            if (!string.IsNullOrEmpty(infoValue) && (infoValue == "CANC" || infoValue == "P-P"))
+            {
+                return true;
+            }
+
+            // Rule 2: If PS (penalties) exists, confirm FT, ET, and HT
+            if (currentKeys.Contains("ps"))
+            {
+                var psConfirmedKeys = new HashSet<string> { "ft", "et", "ht" };
+                if (psConfirmedKeys.Contains(key))
+                {
+                    return true;
+                }
+            }
+
+            // Rule 3: If FT exists, confirm HT and ET
+            if (currentKeys.Contains("ft"))
+            {
+                var ftConfirmedKeys = new HashSet<string> { "ht", "et" };
+                if (ftConfirmedKeys.Contains(key))
+                {
+                    return true;
+                }
+            }
+
+            // Default: not confirmed
+            return false;
         }
     }
 }

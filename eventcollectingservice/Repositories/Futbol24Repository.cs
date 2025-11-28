@@ -16,7 +16,7 @@ namespace eventcollectingservice.Repositories
         Task DeactivateMatches(List<int> matchIds);
         Task SaveMatchResults(List<MatchResult> results);
         Task<List<int>> GetExistingMatchIds(List<int> matchIds);
-        Task<Dictionary<string, string>> GetLatestResultValues(int matchId, List<string> keys);
+        Task<Dictionary<string, (string value, bool isConfirmed)>> GetLatestResultValues(int matchId, List<string> keys);
     }
 
     public class Futbol24Repository : IFutbol24Repository
@@ -87,16 +87,17 @@ namespace eventcollectingservice.Repositories
                 int matchId = matchGroup.Key;
                 var keys = matchGroup.Select(r => r.Key).ToList();
 
-                // Get latest values for this match
+                // Get latest values and is_confirmed for this match
                 var latestValues = await GetLatestResultValues(matchId, keys);
 
-                // Only insert if value has changed or doesn't exist
+                // Only insert if value has changed, is_confirmed has changed, or doesn't exist
                 foreach (var result in matchGroup)
                 {
                     string compositeKey = $"{matchId}_{result.Key}";
 
-                    if (!latestValues.TryGetValue(compositeKey, out string? existingValue) ||
-                        existingValue != result.Value)
+                    if (!latestValues.TryGetValue(compositeKey, out var existing) ||
+                        existing.value != result.Value ||
+                        existing.isConfirmed != result.IsConfirmed)
                     {
                         resultsToInsert.Add(result);
                     }
@@ -127,16 +128,16 @@ namespace eventcollectingservice.Repositories
             return result.ToList();
         }
 
-        public async Task<Dictionary<string, string>> GetLatestResultValues(int matchId, List<string> keys)
+        public async Task<Dictionary<string, (string value, bool isConfirmed)>> GetLatestResultValues(int matchId, List<string> keys)
         {
             if (keys == null || !keys.Any())
             {
-                return new Dictionary<string, string>();
+                return new Dictionary<string, (string value, bool isConfirmed)>();
             }
 
-            // Get the latest value for each key by finding max(id) grouped by result_key
+            // Get the latest value and is_confirmed for each key by finding max(id) grouped by result_key
             var query = @"
-                SELECT r1.match_id, r1.result_key, r1.result_value
+                SELECT r1.match_id, r1.result_key, r1.result_value, r1.is_confirmed
                 FROM `futbol24_result` r1
                 INNER JOIN (
                     SELECT result_key, MAX(id) as max_id
@@ -150,11 +151,12 @@ namespace eventcollectingservice.Repositories
                 new { MatchId = matchId, Keys = keys }
             );
 
-            var dictionary = new Dictionary<string, string>();
+            var dictionary = new Dictionary<string, (string value, bool isConfirmed)>();
             foreach (var row in results)
             {
                 string compositeKey = $"{row.match_id}_{row.result_key}";
-                dictionary[compositeKey] = row.result_value;
+                bool isConfirmed = Convert.ToBoolean(row.is_confirmed);
+                dictionary[compositeKey] = (row.result_value, isConfirmed);
             }
 
             return dictionary;

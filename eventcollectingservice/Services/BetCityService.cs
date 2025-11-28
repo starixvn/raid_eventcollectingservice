@@ -222,6 +222,10 @@ namespace eventcollectingservice.Services
                 AddResultIfNotEmpty(matchResults, matchId, "threeGoalsInRow", resultData.ThreeGoalsInRow);
             }
 
+            // Set IsConfirmed status BEFORE saving
+            SetSoccerConfirmationStatus(matchResults);
+
+            // Save once with correct is_confirmed status
             await SaveProcessedResults(matchResults);
         }
 
@@ -256,6 +260,10 @@ namespace eventcollectingservice.Services
                 AddResultIfNotEmpty(matchResults, matchId, "race50", resultData.Race50);
             }
 
+            // Set IsConfirmed status BEFORE saving
+            SetBasketballConfirmationStatus(matchResults);
+
+            // Save once with correct is_confirmed status
             await SaveProcessedResults(matchResults);
         }
 
@@ -279,6 +287,10 @@ namespace eventcollectingservice.Services
                 AddResultIfNotEmpty(matchResults, matchId, "s5score", resultData.Q5Score);
             }
 
+            // Set IsConfirmed status BEFORE saving
+            SetVolleyballConfirmationStatus(matchResults);
+
+            // Save once with correct is_confirmed status
             await SaveProcessedResults(matchResults);
         }
 
@@ -333,6 +345,190 @@ namespace eventcollectingservice.Services
                     IsConfirmed = false
                 });
             }
+        }
+
+        // ========== Confirmation Status Setting (Before Save) ==========
+
+        private void SetSoccerConfirmationStatus(List<MatchResult> matchResults)
+        {
+            // Group by match_id
+            var matchIds = matchResults.Select(r => r.MatchId).Distinct().ToList();
+
+            foreach (var matchId in matchIds)
+            {
+                // Get keys from current batch only
+                var currentKeys = matchResults.Where(r => r.MatchId == matchId).Select(r => r.Key).ToHashSet();
+
+                // Determine which keys should be confirmed based on current batch
+                foreach (var result in matchResults.Where(r => r.MatchId == matchId))
+                {
+                    result.IsConfirmed = ShouldSoccerResultBeConfirmed(result.Key, currentKeys);
+                }
+            }
+        }
+
+        private bool ShouldSoccerResultBeConfirmed(string key, HashSet<string> allKeys)
+        {
+            // Rule 1: If FT exists, confirm HT and all full-match events
+            if (allKeys.Contains("ft"))
+            {
+                var ftConfirmedKeys = new HashSet<string> {
+                    "ht", "penalty", "redCard", "firstPenaltyScorer",
+                    "firstGoalSecondHalf", "penaltySecondHalf", "redCardSecondHalf",
+                    "bothTeamsPenalty", "penaltyMissed", "penaltyScored", "penaltyVAR",
+                    "redCardBothTeams", "goalkeeperRedCard",
+                    "secondGoalMin", "totalPenalties", "goalInTimeRange",
+                    "twoGoalsInRow", "threeGoalsInRow", "arubaFirstPenalty"
+                };
+
+                if (ftConfirmedKeys.Contains(key))
+                {
+                    return true;
+                }
+
+                // TODO: Confirm FT itself when match_status = "Finished" or "Ended"
+                // if (key == "ft" && matchStatus == "Finished") return true;
+            }
+
+            // Rule 2: If HT exists, confirm first-half events
+            if (allKeys.Contains("ht"))
+            {
+                var htConfirmedKeys = new HashSet<string> {
+                    "firstGoalFirstHalf", "penaltyFirstHalf", "redCardFirstHalf",
+                    "scoreFirst10Min", "firstGoal", "firstGoalMin"
+                };
+
+                if (htConfirmedKeys.Contains(key))
+                {
+                    return true;
+                }
+            }
+
+            // TODO: Time-based confirmation
+            // Check if result is older than X hours
+
+            return false;
+        }
+
+        private void SetBasketballConfirmationStatus(List<MatchResult> matchResults)
+        {
+            var matchIds = matchResults.Select(r => r.MatchId).Distinct().ToList();
+
+            foreach (var matchId in matchIds)
+            {
+                // Get keys from current batch only
+                var currentKeys = matchResults.Where(r => r.MatchId == matchId).Select(r => r.Key).ToHashSet();
+
+                // Determine which keys should be confirmed based on current batch
+                foreach (var result in matchResults.Where(r => r.MatchId == matchId))
+                {
+                    result.IsConfirmed = ShouldBasketballResultBeConfirmed(result.Key, currentKeys);
+                }
+            }
+        }
+
+        private bool ShouldBasketballResultBeConfirmed(string key, HashSet<string> allKeys)
+        {
+            // Rule: FT confirms everything
+            if (allKeys.Contains("ft"))
+            {
+                var ftConfirmedKeys = new HashSet<string> {
+                    "q1score", "q2score", "q3score", "q4score",
+                    "ot1Score", "ot2Score", "ot3Score",
+                    "firstToScore", "race20Q3", "race100", "race75", "race50"
+                };
+
+                if (ftConfirmedKeys.Contains(key))
+                {
+                    return true;
+                }
+
+                // TODO: Confirm FT itself when match_status = "Finished"
+            }
+
+            // Rule: Quarter N+1 confirms Quarter N
+            if (key == "q1score" && (allKeys.Contains("q2score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "firstToScore" && (allKeys.Contains("q2score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "q2score" && (allKeys.Contains("q3score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "q3score" && (allKeys.Contains("q4score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "race20Q3" && (allKeys.Contains("q4score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "q4score" && (allKeys.Contains("ot1Score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "race50" && (allKeys.Contains("ot1Score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "ot1Score" && (allKeys.Contains("ot2Score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "ot2Score" && (allKeys.Contains("ot3Score") || allKeys.Contains("ft")))
+                return true;
+
+            // TODO: Time-based confirmation
+
+            return false;
+        }
+
+        private void SetVolleyballConfirmationStatus(List<MatchResult> matchResults)
+        {
+            var matchIds = matchResults.Select(r => r.MatchId).Distinct().ToList();
+
+            foreach (var matchId in matchIds)
+            {
+                // Get keys from current batch only
+                var currentKeys = matchResults.Where(r => r.MatchId == matchId).Select(r => r.Key).ToHashSet();
+
+                // Determine which keys should be confirmed based on current batch
+                foreach (var result in matchResults.Where(r => r.MatchId == matchId))
+                {
+                    result.IsConfirmed = ShouldVolleyballResultBeConfirmed(result.Key, currentKeys);
+                }
+            }
+        }
+
+        private bool ShouldVolleyballResultBeConfirmed(string key, HashSet<string> allKeys)
+        {
+            // Rule: FT confirms everything
+            if (allKeys.Contains("ft"))
+            {
+                var ftConfirmedKeys = new HashSet<string> {
+                    "s1score", "s2score", "s3score", "s4score", "s5score"
+                };
+
+                if (ftConfirmedKeys.Contains(key))
+                {
+                    return true;
+                }
+
+                // TODO: Confirm FT itself when match_status = "Finished"
+            }
+
+            // Rule: Set N+1 confirms Set N
+            if (key == "s1score" && (allKeys.Contains("s2score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "s2score" && (allKeys.Contains("s3score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "s3score" && (allKeys.Contains("s4score") || allKeys.Contains("ft")))
+                return true;
+
+            if (key == "s4score" && (allKeys.Contains("s5score") || allKeys.Contains("ft")))
+                return true;
+
+            // TODO: Time-based confirmation
+
+            return false;
         }
     }
 }
