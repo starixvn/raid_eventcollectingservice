@@ -6,7 +6,9 @@ namespace eventcollectingservice.Services
     public interface IBetCityService
     {
         Task ProcessBetCityEvent(List<BetCityEventData> BetCityEventData);
-        Task ProcessBetCityResults(List<BetCityResultData> betCityResultData);
+        Task ProcessSoccerResults(List<SoccerResultData> soccerResultData);
+        Task ProcessBasketballResults(List<BasketballResultData> basketballResultData);
+        Task ProcessVolleyballResults(List<VolleyballResultData> volleyballResultData);
     }
     public class BetCityService : IBetCityService
     {
@@ -99,17 +101,17 @@ namespace eventcollectingservice.Services
             return DateTime.Now;
         }
 
-        public async Task ProcessBetCityResults(List<BetCityResultData> betCityResults)
+        public async Task ProcessSoccerResults(List<SoccerResultData> soccerResults)
         {
             try
             {
-                if (betCityResults == null || !betCityResults.Any())
+                if (soccerResults == null || !soccerResults.Any())
                 {
-                    throw new ArgumentException("BetCity result data is required and cannot be empty");
+                    throw new ArgumentException("Soccer result data is required and cannot be empty");
                 }
 
                 // Validate event IDs
-                foreach (var resultData in betCityResults)
+                foreach (var resultData in soccerResults)
                 {
                     if (resultData.EventId <= 0)
                     {
@@ -117,25 +119,79 @@ namespace eventcollectingservice.Services
                     }
                 }
 
-                await ProcessResults(betCityResults);
+                await ProcessSoccerResultsInternal(soccerResults);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in BetCityService.ProcessBetCityResults: {ex.Message}");
+                Console.WriteLine($"Error in BetCityService.ProcessSoccerResults: {ex.Message}");
                 throw;
             }
         }
 
-        private async Task ProcessResults(List<BetCityResultData> resultDataList)
+        public async Task ProcessBasketballResults(List<BasketballResultData> basketballResults)
+        {
+            try
+            {
+                if (basketballResults == null || !basketballResults.Any())
+                {
+                    throw new ArgumentException("Basketball result data is required and cannot be empty");
+                }
+
+                // Validate event IDs
+                foreach (var resultData in basketballResults)
+                {
+                    if (resultData.EventId <= 0)
+                    {
+                        throw new ArgumentException($"Event ID must be greater than 0. Invalid Event ID: {resultData.EventId}");
+                    }
+                }
+
+                await ProcessBasketballResultsInternal(basketballResults);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in BetCityService.ProcessBasketballResults: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task ProcessVolleyballResults(List<VolleyballResultData> volleyballResults)
+        {
+            try
+            {
+                if (volleyballResults == null || !volleyballResults.Any())
+                {
+                    throw new ArgumentException("Volleyball result data is required and cannot be empty");
+                }
+
+                // Validate event IDs
+                foreach (var resultData in volleyballResults)
+                {
+                    if (resultData.EventId <= 0)
+                    {
+                        throw new ArgumentException($"Event ID must be greater than 0. Invalid Event ID: {resultData.EventId}");
+                    }
+                }
+
+                await ProcessVolleyballResultsInternal(volleyballResults);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in BetCityService.ProcessVolleyballResults: {ex.Message}");
+                throw;
+            }
+        }
+
+        private async Task ProcessSoccerResultsInternal(List<SoccerResultData> resultDataList)
         {
             var matchResults = new List<MatchResult>();
 
-            // Convert each result data to multiple key-value pairs
+            // Convert each soccer result to key-value pairs
             foreach (var resultData in resultDataList)
             {
                 int matchId = resultData.EventId;
 
-                // Common score fields
+                // Common score field
                 AddResultIfNotEmpty(matchResults, matchId, "ft", resultData.FinalScore);
 
                 // Soccer-specific fields
@@ -164,15 +220,30 @@ namespace eventcollectingservice.Services
                 AddResultIfNotEmpty(matchResults, matchId, "goalInTimeRange", resultData.GoalInTimeRange);
                 AddResultIfNotEmpty(matchResults, matchId, "twoGoalsInRow", resultData.TwoGoalsInRow);
                 AddResultIfNotEmpty(matchResults, matchId, "threeGoalsInRow", resultData.ThreeGoalsInRow);
+            }
 
-                // Basketball & Volleyball quarter/set scores
+            await SaveProcessedResults(matchResults);
+        }
+
+        private async Task ProcessBasketballResultsInternal(List<BasketballResultData> resultDataList)
+        {
+            var matchResults = new List<MatchResult>();
+
+            // Convert each basketball result to key-value pairs
+            foreach (var resultData in resultDataList)
+            {
+                int matchId = resultData.EventId;
+
+                // Common score field
+                AddResultIfNotEmpty(matchResults, matchId, "ft", resultData.FinalScore);
+
+                // Quarter scores
                 AddResultIfNotEmpty(matchResults, matchId, "q1score", resultData.Q1Score);
                 AddResultIfNotEmpty(matchResults, matchId, "q2score", resultData.Q2Score);
                 AddResultIfNotEmpty(matchResults, matchId, "q3score", resultData.Q3Score);
                 AddResultIfNotEmpty(matchResults, matchId, "q4score", resultData.Q4Score);
-                AddResultIfNotEmpty(matchResults, matchId, "q5score", resultData.Q5Score);
 
-                // Basketball overtime scores
+                // Overtime scores
                 AddResultIfNotEmpty(matchResults, matchId, "ot1Score", resultData.OT1Score);
                 AddResultIfNotEmpty(matchResults, matchId, "ot2Score", resultData.OT2Score);
                 AddResultIfNotEmpty(matchResults, matchId, "ot3Score", resultData.OT3Score);
@@ -185,6 +256,34 @@ namespace eventcollectingservice.Services
                 AddResultIfNotEmpty(matchResults, matchId, "race50", resultData.Race50);
             }
 
+            await SaveProcessedResults(matchResults);
+        }
+
+        private async Task ProcessVolleyballResultsInternal(List<VolleyballResultData> resultDataList)
+        {
+            var matchResults = new List<MatchResult>();
+
+            // Convert each volleyball result to key-value pairs
+            foreach (var resultData in resultDataList)
+            {
+                int matchId = resultData.EventId;
+
+                // Common score field
+                AddResultIfNotEmpty(matchResults, matchId, "ft", resultData.FinalScore);
+
+                // Set scores
+                AddResultIfNotEmpty(matchResults, matchId, "q1score", resultData.Q1Score);
+                AddResultIfNotEmpty(matchResults, matchId, "q2score", resultData.Q2Score);
+                AddResultIfNotEmpty(matchResults, matchId, "q3score", resultData.Q3Score);
+                AddResultIfNotEmpty(matchResults, matchId, "q4score", resultData.Q4Score);
+                AddResultIfNotEmpty(matchResults, matchId, "q5score", resultData.Q5Score);
+            }
+
+            await SaveProcessedResults(matchResults);
+        }
+
+        private async Task SaveProcessedResults(List<MatchResult> matchResults)
+        {
             // Remove duplicates by (MatchId, Key) - keep last occurrence
             matchResults = matchResults
                 .GroupBy(r => new { r.MatchId, r.Key })

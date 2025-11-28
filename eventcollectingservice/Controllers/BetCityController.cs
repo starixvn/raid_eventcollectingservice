@@ -23,13 +23,41 @@ namespace eventcollectingservice.Controllers
             }
         }
 
-        [HttpPost("results")]
-        public async Task<IActionResult> PostResult(BetCityResultRequest request)
+        [HttpPost("results/soccer")]
+        public async Task<IActionResult> PostSoccerResult(SoccerResultRequest request)
         {
             try
             {
-                await betCityService.ProcessBetCityResults(request.Results);
-                return Ok(new { message = "BetCity result processed successfully" });
+                await betCityService.ProcessSoccerResults(request.Results);
+                return Ok(new { message = "BetCity soccer result processed successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("results/basketball")]
+        public async Task<IActionResult> PostBasketballResult(BasketballResultRequest request)
+        {
+            try
+            {
+                await betCityService.ProcessBasketballResults(request.Results);
+                return Ok(new { message = "BetCity basketball result processed successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("results/volleyball")]
+        public async Task<IActionResult> PostVolleyballResult(VolleyballResultRequest request)
+        {
+            try
+            {
+                await betCityService.ProcessVolleyballResults(request.Results);
+                return Ok(new { message = "BetCity volleyball result processed successfully" });
             }
             catch (Exception ex)
             {
