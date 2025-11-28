@@ -272,11 +272,11 @@ namespace eventcollectingservice.Services
                 AddResultIfNotEmpty(matchResults, matchId, "ft", resultData.FinalScore);
 
                 // Set scores
-                AddResultIfNotEmpty(matchResults, matchId, "q1score", resultData.Q1Score);
-                AddResultIfNotEmpty(matchResults, matchId, "q2score", resultData.Q2Score);
-                AddResultIfNotEmpty(matchResults, matchId, "q3score", resultData.Q3Score);
-                AddResultIfNotEmpty(matchResults, matchId, "q4score", resultData.Q4Score);
-                AddResultIfNotEmpty(matchResults, matchId, "q5score", resultData.Q5Score);
+                AddResultIfNotEmpty(matchResults, matchId, "s1score", resultData.Q1Score);
+                AddResultIfNotEmpty(matchResults, matchId, "s2score", resultData.Q2Score);
+                AddResultIfNotEmpty(matchResults, matchId, "s3score", resultData.Q3Score);
+                AddResultIfNotEmpty(matchResults, matchId, "s4score", resultData.Q4Score);
+                AddResultIfNotEmpty(matchResults, matchId, "s5score", resultData.Q5Score);
             }
 
             await SaveProcessedResults(matchResults);
