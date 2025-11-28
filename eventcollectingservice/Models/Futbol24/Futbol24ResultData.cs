@@ -8,8 +8,6 @@ namespace eventcollectingservice.Models.Futbol24
         // Match identification
         public int Cid { get; set; }
         public long MId { get; set; }
-        public DateTime EventDate { get; set; }
-        public DateTime EventTime { get; set; }
 
         // League info
         public int PLeagueId { get; set; }

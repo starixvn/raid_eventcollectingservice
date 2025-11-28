@@ -15,6 +15,7 @@ namespace eventcollectingservice.Repositories
         Task DeactivateMatches(List<int> matchIds);
         Task SaveMatchResults(List<MatchResult> results);
         Task<List<int>> GetExistingMatchIds(List<int> matchIds);
+        Task<Dictionary<string, string>> GetLatestResultValues(int matchId, List<string> keys);
     }
 
     public class BetCityRepository : IBetCityRepository
@@ -75,18 +76,42 @@ namespace eventcollectingservice.Repositories
                 return;
             }
 
-            // Using INSERT ... ON DUPLICATE KEY UPDATE
-            // Assumes unique index on (match_id, key)
-            var query = @"
-                INSERT INTO `betcity_result`
-                (match_id, `key`, value, is_confirmed, create_time)
-                VALUES
-                (@MatchId, @Key, @Value, @IsConfirmed, NOW())
-                ON DUPLICATE KEY UPDATE
-                    value = @Value,
-                    is_confirmed = @IsConfirmed;";
+            // Group results by match_id for efficient querying
+            var resultsByMatch = results.GroupBy(r => r.MatchId).ToList();
 
-            await _dbConnection.ExecuteAsync(query, results);
+            var resultsToInsert = new List<MatchResult>();
+
+            foreach (var matchGroup in resultsByMatch)
+            {
+                int matchId = matchGroup.Key;
+                var keys = matchGroup.Select(r => r.Key).ToList();
+
+                // Get latest values for this match
+                var latestValues = await GetLatestResultValues(matchId, keys);
+
+                // Only insert if value has changed or doesn't exist
+                foreach (var result in matchGroup)
+                {
+                    string compositeKey = $"{matchId}_{result.Key}";
+
+                    if (!latestValues.TryGetValue(compositeKey, out string? existingValue) ||
+                        existingValue != result.Value)
+                    {
+                        resultsToInsert.Add(result);
+                    }
+                }
+            }
+
+            if (resultsToInsert.Any())
+            {
+                var query = @"
+                    INSERT INTO `betcity_result`
+                    (match_id, result_key, result_value, is_confirmed, create_time)
+                    VALUES
+                    (@MatchId, @Key, @Value, @IsConfirmed, NOW());";
+
+                await _dbConnection.ExecuteAsync(query, resultsToInsert);
+            }
         }
 
         public async Task<List<int>> GetExistingMatchIds(List<int> matchIds)
@@ -99,6 +124,39 @@ namespace eventcollectingservice.Repositories
             var query = "SELECT id FROM `betcity_match` WHERE id IN @MatchIds;";
             var result = await _dbConnection.QueryAsync<int>(query, new { MatchIds = matchIds });
             return result.ToList();
+        }
+
+        public async Task<Dictionary<string, string>> GetLatestResultValues(int matchId, List<string> keys)
+        {
+            if (keys == null || !keys.Any())
+            {
+                return new Dictionary<string, string>();
+            }
+
+            // Get the latest value for each key by finding max(id) grouped by result_key
+            var query = @"
+                SELECT r1.match_id, r1.result_key, r1.result_value
+                FROM `betcity_result` r1
+                INNER JOIN (
+                    SELECT result_key, MAX(id) as max_id
+                    FROM `betcity_result`
+                    WHERE match_id = @MatchId AND result_key IN @Keys
+                    GROUP BY result_key
+                ) r2 ON r1.id = r2.max_id;";
+
+            var results = await _dbConnection.QueryAsync<dynamic>(
+                query,
+                new { MatchId = matchId, Keys = keys }
+            );
+
+            var dictionary = new Dictionary<string, string>();
+            foreach (var row in results)
+            {
+                string compositeKey = $"{row.match_id}_{row.result_key}";
+                dictionary[compositeKey] = row.result_value;
+            }
+
+            return dictionary;
         }
     }
 }
