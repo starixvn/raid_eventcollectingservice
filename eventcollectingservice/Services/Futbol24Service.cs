@@ -59,7 +59,7 @@ namespace eventcollectingservice.Services
                 teams.Add(new Team { Id = eventData.HomeId, Name = eventData.HomeName, LeagueId = eventData.PLeagueId });
                 teams.Add(new Team { Id = eventData.AwayId, Name = eventData.AwayName, LeagueId = eventData.PLeagueId });
 
-                matches.Add(new GameMatch { Id = (int)eventData.Mid, Team1Id = eventData.HomeId, Team2Id = eventData.AwayId, KickoffTime = eventData.EventTime, LeagueId = eventData.LeagueId, IsActive = true });
+                matches.Add(new GameMatch { Id = (int)eventData.Mid, Team1Id = eventData.HomeId, Team2Id = eventData.AwayId, KickoffTime = eventData.EventTime, LeagueId = eventData.LeagueId, IsActive = true, Status = eventData.EventStatus });
             }
 
             // Remove duplicates before saving
