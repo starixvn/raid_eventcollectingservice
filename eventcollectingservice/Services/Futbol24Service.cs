@@ -10,6 +10,7 @@ namespace eventcollectingservice.Services
     public interface IFutbol24Service
     {
         Task ProcessFutbol24Event(List<Futbol24EventData> futbol24EventData);
+        Task ProcessFutbol24Results(List<Futbol24ResultData> futbol24ResultData);
     }
     public class Futbol24Service(IFutbol24Repository futbol24Repository) : IFutbol24Service
     {
@@ -92,6 +93,152 @@ namespace eventcollectingservice.Services
             {
                 Console.WriteLine(e);
                 throw;
+            }
+        }
+
+        public async Task ProcessFutbol24Results(List<Futbol24ResultData> futbol24Results)
+        {
+            try
+            {
+                if (futbol24Results == null || !futbol24Results.Any())
+                {
+                    throw new ArgumentException("Futbol24 result data is required and cannot be empty");
+                }
+
+                // Validate match IDs
+                foreach (var resultData in futbol24Results)
+                {
+                    if (resultData.MId <= 0)
+                    {
+                        throw new ArgumentException($"Match ID must be greater than 0. Invalid Match ID: {resultData.MId}");
+                    }
+                }
+
+                await ProcessResults(futbol24Results);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in Futbol24Service.ProcessFutbol24Results: {ex.Message}");
+                throw;
+            }
+        }
+
+        private async Task ProcessResults(List<Futbol24ResultData> resultDataList)
+        {
+            var matchResults = new List<MatchResult>();
+
+            // Convert each result data to multiple key-value pairs
+            foreach (var resultData in resultDataList)
+            {
+                int matchId = (int)resultData.MId;
+
+                // Add HT (Half Time) result if available
+                if (!string.IsNullOrEmpty(resultData.HT))
+                {
+                    matchResults.Add(new MatchResult
+                    {
+                        MatchId = matchId,
+                        Key = "ht",
+                        Value = resultData.HT,
+                        IsConfirmed = false
+                    });
+                }
+
+                // Add FT (Full Time) result if available
+                if (!string.IsNullOrEmpty(resultData.FT))
+                {
+                    matchResults.Add(new MatchResult
+                    {
+                        MatchId = matchId,
+                        Key = "ft",
+                        Value = resultData.FT,
+                        IsConfirmed = false
+                    });
+                }
+
+                // Add AET (After Extra Time) result if available
+                if (!string.IsNullOrEmpty(resultData.AET))
+                {
+                    matchResults.Add(new MatchResult
+                    {
+                        MatchId = matchId,
+                        Key = "et",
+                        Value = resultData.AET,
+                        IsConfirmed = false
+                    });
+                }
+
+                // Add AP (After Penalties) result if available
+                if (!string.IsNullOrEmpty(resultData.AP))
+                {
+                    matchResults.Add(new MatchResult
+                    {
+                        MatchId = matchId,
+                        Key = "ps",
+                        Value = resultData.AP,
+                        IsConfirmed = false
+                    });
+                }
+
+                // Add HRedCard (Home Red Card) if available
+                if (resultData.HRedCard.HasValue)
+                {
+                    matchResults.Add(new MatchResult
+                    {
+                        MatchId = matchId,
+                        Key = "HRedCard",
+                        Value = resultData.HRedCard.Value.ToString(),
+                        IsConfirmed = false
+                    });
+                }
+
+                // Add ARedCard (Away Red Card) if available
+                if (resultData.ARedCard.HasValue)
+                {
+                    matchResults.Add(new MatchResult
+                    {
+                        MatchId = matchId,
+                        Key = "ARedCard",
+                        Value = resultData.ARedCard.Value.ToString(),
+                        IsConfirmed = false
+                    });
+                }
+            }
+
+            // Remove duplicates by (MatchId, Key) - keep last occurrence
+            matchResults = matchResults
+                .GroupBy(r => new { r.MatchId, r.Key })
+                .Select(g => g.Last())
+                .ToList();
+
+            if (!matchResults.Any())
+            {
+                Console.WriteLine("No valid results to save. All result fields were empty.");
+                return;
+            }
+
+            // Validate that matches exist before saving results
+            var matchIds = matchResults.Select(r => r.MatchId).Distinct().ToList();
+            var existingMatchIds = await futbol24Repository.GetExistingMatchIds(matchIds);
+
+            // Filter out results for non-existent matches
+            var validResults = matchResults
+                .Where(r => existingMatchIds.Contains(r.MatchId))
+                .ToList();
+
+            if (validResults.Count < matchResults.Count)
+            {
+                var invalidMatchIds = matchIds.Except(existingMatchIds).ToList();
+                Console.WriteLine($"Warning: {invalidMatchIds.Count} match(es) do not exist in database. IDs: {string.Join(", ", invalidMatchIds)}");
+            }
+
+            if (validResults.Any())
+            {
+                await futbol24Repository.SaveMatchResults(validResults);
+            }
+            else
+            {
+                Console.WriteLine("No valid results to save. All match IDs were invalid.");
             }
         }
     }

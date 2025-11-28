@@ -28,5 +28,19 @@ namespace eventcollectingservice.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+        [HttpPost("results")]
+        public async Task<IActionResult> PostResult(Futbol24ResultRequest request)
+        {
+            try
+            {
+                await _futbol24Service.ProcessFutbol24Results(request.Results);
+                return Ok(new { message = "Futbol24 result processed successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }
