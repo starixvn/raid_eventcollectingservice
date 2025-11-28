@@ -13,9 +13,23 @@ namespace eventcollectingservice.Controllers
         {
             try
             {
-                if (betCityEventData.Events != null) 
+                if (betCityEventData.Events != null)
                     await betCityService.ProcessBetCityEvent(betCityEventData.Events);
                 return Ok(new { message = "BetCity event processed successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("results")]
+        public async Task<IActionResult> PostResult(BetCityResultRequest request)
+        {
+            try
+            {
+                await betCityService.ProcessBetCityResults(request.Results);
+                return Ok(new { message = "BetCity result processed successfully" });
             }
             catch (Exception ex)
             {

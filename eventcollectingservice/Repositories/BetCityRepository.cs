@@ -13,6 +13,8 @@ namespace eventcollectingservice.Repositories
         Task SaveMatches(List<Match> matches);
         Task<List<int>> GetActiveMatchIds();
         Task DeactivateMatches(List<int> matchIds);
+        Task SaveMatchResults(List<MatchResult> results);
+        Task<List<int>> GetExistingMatchIds(List<int> matchIds);
     }
 
     public class BetCityRepository : IBetCityRepository
@@ -64,6 +66,39 @@ namespace eventcollectingservice.Repositories
 
             var query = "UPDATE `betcity_match` SET is_active = 0, update_time = NOW() WHERE id IN @MatchIds;";
             await _dbConnection.ExecuteAsync(query, new { MatchIds = matchIds });
+        }
+
+        public async Task SaveMatchResults(List<MatchResult> results)
+        {
+            if (results == null || !results.Any())
+            {
+                return;
+            }
+
+            // Using INSERT ... ON DUPLICATE KEY UPDATE
+            // Assumes unique index on (match_id, key)
+            var query = @"
+                INSERT INTO `betcity_result`
+                (match_id, `key`, value, is_confirmed, create_time)
+                VALUES
+                (@MatchId, @Key, @Value, @IsConfirmed, NOW())
+                ON DUPLICATE KEY UPDATE
+                    value = @Value,
+                    is_confirmed = @IsConfirmed;";
+
+            await _dbConnection.ExecuteAsync(query, results);
+        }
+
+        public async Task<List<int>> GetExistingMatchIds(List<int> matchIds)
+        {
+            if (matchIds == null || !matchIds.Any())
+            {
+                return new List<int>();
+            }
+
+            var query = "SELECT id FROM `betcity_match` WHERE id IN @MatchIds;";
+            var result = await _dbConnection.QueryAsync<int>(query, new { MatchIds = matchIds });
+            return result.ToList();
         }
     }
 }
